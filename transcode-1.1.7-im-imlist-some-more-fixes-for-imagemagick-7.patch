@@ -1,0 +1,48 @@
+From b2be9b9933d5064a52b0ee918304336b64708e45 Mon Sep 17 00:00:00 2001
+From: Alexander Golubev <fatzer2@gmail.com>
+Date: Fri, 1 Aug 2025 17:13:28 +0300
+Subject: [PATCH 22/26] [im][imlist] some more fixes for imagemagick-7
+
+This fixes build with gcc-14. The code were broken with older versions
+of gcc, but were slipped with only a warning about implicit declaration.
+In rntime the module were failing to load due to undefined reference
+anyway.
+
+Note: as usual this won't prevent build against later versions of
+ImageMagick-6.
+
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ import/import_im.c     | 2 +-
+ import/import_imlist.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/import/import_im.c b/import/import_im.c
+index c51c3801..71b54424 100644
+--- a/import/import_im.c
++++ b/import/import_im.c
+@@ -289,7 +289,7 @@ MOD_decode
+ 
+         MagickSetLastIterator(wand);
+ 
+-        status = MagickGetImagePixels(wand,
++        status = MagickExportImagePixels(wand,
+                                       0, 0, width, height,
+                                       "RGB", CharPixel,
+                                       param->buffer);
+diff --git a/import/import_imlist.c b/import/import_imlist.c
+index 53289130..25c47be6 100644
+--- a/import/import_imlist.c
++++ b/import/import_imlist.c
+@@ -155,7 +155,7 @@ MOD_decode
+ 
+         MagickSetLastIterator(wand);
+ 
+-        status = MagickGetImagePixels(wand,
++        status = MagickExportImagePixels(wand,
+                                       0, 0, width, height,
+                                       "RGB", CharPixel,
+                                       param->buffer);
+-- 
+2.49.1
+

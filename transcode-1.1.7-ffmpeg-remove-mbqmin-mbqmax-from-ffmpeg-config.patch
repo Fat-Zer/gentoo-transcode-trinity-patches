@@ -1,0 +1,77 @@
+From fd1a63cc6cea3837b3186fc978f3aa9023defc17 Mon Sep 17 00:00:00 2001
+From: Unknown Author <unknown@examle.com>
+Date: Wed, 30 Jul 2025 01:15:51 +0300
+Subject: [PATCH 01/26] [ffmpeg] remove mbqmin/mbqmax from ffmpeg config
+
+A patch from Gentoo to fix build against some old version of ffmpeg
+
+Origin: https://github.com/gentoo/gentoo-historical-2/commit/5bf733e61bddbc189a76a94ac0b782d27f2e1d84
+Original-commiter: Alexis Ballier <aballier@gentoo.org>
+Patch-name: transcode-1.1.7-ffmpeg.patch
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ encode/encode_lavc.c | 4 ----
+ export/ffmpeg_cfg.c  | 4 ----
+ export/ffmpeg_cfg.h  | 2 --
+ 3 files changed, 10 deletions(-)
+
+diff --git a/encode/encode_lavc.c b/encode/encode_lavc.c
+index 4d8eb0d6..1f5ac4a9 100644
+--- a/encode/encode_lavc.c
++++ b/encode/encode_lavc.c
+@@ -955,8 +955,6 @@ static void tc_lavc_config_defaults(TCLavcPrivateData *pd)
+     /* 
+      * context *transcode* (not libavcodec) defaults
+      */
+-    pd->ff_vcontext.mb_qmin                 = 2;
+-    pd->ff_vcontext.mb_qmax                 = 31;
+     pd->ff_vcontext.max_qdiff               = 3;
+     pd->ff_vcontext.max_b_frames            = 0;
+     pd->ff_vcontext.me_range                = 0;
+@@ -1116,8 +1114,6 @@ static int tc_lavc_read_config(TCLavcPrivateData *pd,
+         //  handled by transcode core
+         //  { "vqmax", PCTX(qmax), TCCONF_TYPE_INT, TCCONF_FLAG_RANGE, 1, 60 },
+         //  handled by transcode core
+-        { "mbqmin", PCTX(mb_qmin), TCCONF_TYPE_INT, TCCONF_FLAG_RANGE, 1, 60 },
+-        { "mbqmax", PCTX(mb_qmax), TCCONF_TYPE_INT, TCCONF_FLAG_RANGE, 1, 60 },
+         { "lmin", PAUX(lmin), TCCONF_TYPE_FLOAT, TCCONF_FLAG_RANGE, 0.01, 255.0 },
+         { "lmax", PAUX(lmax), TCCONF_TYPE_FLOAT, TCCONF_FLAG_RANGE, 0.01, 255.0 },
+         { "vqdiff", PCTX(max_qdiff), TCCONF_TYPE_INT, TCCONF_FLAG_RANGE, 1, 31 },
+diff --git a/export/ffmpeg_cfg.c b/export/ffmpeg_cfg.c
+index 0c3affcb..54041b8d 100644
+--- a/export/ffmpeg_cfg.c
++++ b/export/ffmpeg_cfg.c
+@@ -34,8 +34,6 @@ int lavc_param_vme = 4;
+ //int lavc_param_vqscale = 0;
+ //int lavc_param_vqmin = 2;
+ //int lavc_param_vqmax = 31;
+-int lavc_param_mb_qmin = 2;
+-int lavc_param_mb_qmax = 31;
+ int lavc_param_lmin = 2;
+ int lavc_param_lmax = 31;
+ int lavc_param_vqdiff = 3;
+@@ -143,8 +141,6 @@ TCConfigEntry lavcopts_conf[]={
+ //    {"vqscale", &lavc_param_vqscale, TCCONF_TYPE_INT, TCCONF_FLAG_RANGE, 1, 31},
+ //    {"vqmin", &lavc_param_vqmin, TCCONF_TYPE_INT, TCCONF_FLAG_RANGE, 1, 31},
+ //    {"vqmax", &lavc_param_vqmax, TCCONF_TYPE_INT, TCCONF_FLAG_RANGE, 1, 31},
+-    {"mbqmin", &lavc_param_mb_qmin, TCCONF_TYPE_INT, TCCONF_FLAG_RANGE, 1, 31},
+-    {"mbqmax", &lavc_param_mb_qmax, TCCONF_TYPE_INT, TCCONF_FLAG_RANGE, 1, 31},
+     {"lmin", &lavc_param_lmin, TCCONF_TYPE_FLOAT, TCCONF_FLAG_RANGE, 0.01, 255.0},
+     {"lmax", &lavc_param_lmax, TCCONF_TYPE_FLOAT, TCCONF_FLAG_RANGE, 0.01, 255.0},
+     {"vqdiff", &lavc_param_vqdiff, TCCONF_TYPE_INT, TCCONF_FLAG_RANGE, 1, 31},
+diff --git a/export/ffmpeg_cfg.h b/export/ffmpeg_cfg.h
+index 445300c3..8e168685 100644
+--- a/export/ffmpeg_cfg.h
++++ b/export/ffmpeg_cfg.h
+@@ -13,8 +13,6 @@ extern int lavc_param_vme;
+ //extern int lavc_param_vqscale;
+ //extern int lavc_param_vqmin;
+ //extern int lavc_param_vqmax;
+-extern int lavc_param_mb_qmin;
+-extern int lavc_param_mb_qmax;
+ extern int lavc_param_lmin;
+ extern int lavc_param_lmax;
+ extern int lavc_param_vqdiff;
+-- 
+2.49.1
+

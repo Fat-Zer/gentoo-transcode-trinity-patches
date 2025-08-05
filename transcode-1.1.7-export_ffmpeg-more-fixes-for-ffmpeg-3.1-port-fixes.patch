@@ -1,0 +1,50 @@
+From c69cde936389db1c2f83204bd436f4a912759656 Mon Sep 17 00:00:00 2001
+From: Alexander Golubev <fatzer2@gmail.com>
+Date: Sun, 3 Aug 2025 00:00:02 +0300
+Subject: [PATCH 26/26] [export_ffmpeg] more fixes for ffmpeg-3.1+ port fixes
+
+In particular:
+* Setup AVFrame before passing it to avcodec_encode_video2()
+* A bit nicer error handling if avcodec_encode_video2() fails
+
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ export/export_ffmpeg.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/export/export_ffmpeg.c b/export/export_ffmpeg.c
+index 86c2967a..5c9aab58 100644
+--- a/export/export_ffmpeg.c
++++ b/export/export_ffmpeg.c
+@@ -1615,6 +1615,10 @@ MOD_encode
+     lavc_venc_frame->interlaced_frame = interlacing_active;
+     lavc_venc_frame->top_field_first = interlacing_top_first;
+ 
++    lavc_venc_frame->format = lavc_venc_context->pix_fmt;
++    lavc_venc_frame->width  = lavc_venc_context->width;
++    lavc_venc_frame->height = lavc_venc_context->height;
++
+     switch (pix_fmt)
+     {
+         case CODEC_YUV:
+@@ -1691,12 +1695,13 @@ MOD_encode
+                                     lavc_venc_frame, &got_packet);
+     TC_UNLOCK_LIBAVCODEC;
+ 
+-    out_size = ret ? ret : pkt.size;
+-
+-    if (out_size < 0) {
+-      tc_log_warn(MOD_NAME, "encoder error: size (%d)", out_size);
++    if (ret < 0) {
++      tc_log_warn(MOD_NAME, "encoder error: %s (%d)", av_err2str(ret), ret);
+       return TC_EXPORT_ERROR;
++    } else {
++        out_size = pkt.size;
+     }
++
+     if (verbose & TC_STATS) {
+       tc_log_warn(MOD_NAME, "encoder: size of encoded (%d)", out_size);
+     }
+-- 
+2.49.1
+

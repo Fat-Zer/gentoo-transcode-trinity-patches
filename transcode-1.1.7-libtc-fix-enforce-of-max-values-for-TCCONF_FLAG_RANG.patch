@@ -1,0 +1,26 @@
+From 7d3bb1c737609caf7b6691d672436f3fd58e256a Mon Sep 17 00:00:00 2001
+From: Alexander Golubev <fatzer2@gmail.com>
+Date: Fri, 1 Aug 2025 18:16:37 +0300
+Subject: [PATCH 23/26] [libtc] fix enforce of max values for TCCONF_FLAG_RANGE
+
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ libtc/cfgfile.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libtc/cfgfile.h b/libtc/cfgfile.h
+index 7a1e4b77..a4aa980e 100644
+--- a/libtc/cfgfile.h
++++ b/libtc/cfgfile.h
+@@ -34,7 +34,7 @@ typedef struct {
+ 
+ #define TCCONF_FLAG_MIN         (1<<0)
+ #define TCCONF_FLAG_MAX         (1<<1)
+-#define TCCONF_FLAG_RANGE        (1<<0)
++#define TCCONF_FLAG_RANGE       (TCCONF_FLAG_MIN|TCCONF_FLAG_MAX)
+ 
+ /*************************************************************************/
+ 
+-- 
+2.49.1
+
