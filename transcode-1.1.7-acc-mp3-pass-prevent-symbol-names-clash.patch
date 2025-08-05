@@ -1,0 +1,77 @@
+From 4d605d009338fbfadf579bf8995b7617a5b05b98 Mon Sep 17 00:00:00 2001
+From: Jeroen Roovers <jer@gentoo.org>
+Date: Wed, 30 Jul 2025 18:38:08 +0300
+Subject: [PATCH 12/26] [acc][mp3][pass] prevent symbol names clash
+
+Prevent names clash of symbols from different compilation units. This
+fixes build with gcc-10 -fno-common
+
+This wersion of patch was received from rinity
+
+Bug: https://bugs.gentoo.org/707162
+Origin: https://mirror.git.trinitydesktop.org/gitea/TDE/extra-dependencies/src/commit/41c6824ccb9b5d6c72cbde472d1b821838e5596b/debian/transcode/transcode-1.1.7/debian/patches/15-multiple-definitions.diff
+Original-commuter: Michele Calgaro <michele.calgaro@yahoo.it>
+Patch-name: 15-multiple-definitions.diff
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ import/demux_pass.c  | 2 --
+ import/extract_ac3.c | 2 +-
+ import/extract_mp3.c | 2 +-
+ import/extract_pcm.c | 2 +-
+ 4 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/import/demux_pass.c b/import/demux_pass.c
+index 10c5b0f3..ba7cbb8b 100644
+--- a/import/demux_pass.c
++++ b/import/demux_pass.c
+@@ -32,8 +32,6 @@
+ #include "packets.h"
+ 
+ 
+-int gop, gop_pts, gop_cnt;
+-
+ /* if you listen carefully, then you can hear the desesperate
+  * whisper of this code calling for a rewrite. Or for a redesign.
+  * Or both. --  FR
+diff --git a/import/extract_ac3.c b/import/extract_ac3.c
+index 0bb1028c..6e68e75b 100644
+--- a/import/extract_ac3.c
++++ b/import/extract_ac3.c
+@@ -334,7 +334,7 @@ static void pes_ac3_loop (void)
+ FILE *fd;
+ 
+ #define MAX_BUF 4096
+-char audio[MAX_BUF];
++static char audio[MAX_BUF];
+ 
+ 
+ /* from ac3scan.c */
+diff --git a/import/extract_mp3.c b/import/extract_mp3.c
+index 950bbe98..1a39608a 100644
+--- a/import/extract_mp3.c
++++ b/import/extract_mp3.c
+@@ -243,7 +243,7 @@ static int mp3scan(int infd, int outfd)
+ }
+ 
+ #define MAX_BUF 4096
+-char audio[MAX_BUF];
++static char audio[MAX_BUF];
+ 
+ /* ------------------------------------------------------------
+  *
+diff --git a/import/extract_pcm.c b/import/extract_pcm.c
+index 326c7387..de2ad04c 100644
+--- a/import/extract_pcm.c
++++ b/import/extract_pcm.c
+@@ -33,7 +33,7 @@
+ #include "tc.h"
+ 
+ #define MAX_BUF 4096
+-char audio[MAX_BUF];
++static char audio[MAX_BUF];
+ 
+ #define BUFFER_SIZE 262144
+ static uint8_t buffer[BUFFER_SIZE];
+-- 
+2.49.1
+

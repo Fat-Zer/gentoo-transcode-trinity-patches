@@ -1,0 +1,48 @@
+From bce9bf1d3b8256daa48e47abe2b183332d827b9d Mon Sep 17 00:00:00 2001
+From: Brennan Shacklett <bpshacklett@gmail.com>
+Date: Wed, 30 Jul 2025 01:51:38 +0300
+Subject: [PATCH 04/26] [lavc] fix invalid free when preset file not found
+
+Bug: https://bugs.gentoo.org/show_bug.cgi?id=322945
+Origin: https://github.com/gentoo/gentoo-historical-2/commit/c50206343ba79cbd57cd23150b2579abb979e1f6
+Original-commuter: Alexis Ballier <aballier@gentoo.org>
+Patch-name: transcode-1.1.7-preset-free.patch
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ export/export_ffmpeg.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/export/export_ffmpeg.c b/export/export_ffmpeg.c
+index 16244905..1577fac8 100644
+--- a/export/export_ffmpeg.c
++++ b/export/export_ffmpeg.c
+@@ -322,7 +322,7 @@ static int opt_preset(const char *opt, const char *arg)
+     }
+ 
+     if(!f){
+-        fprintf(stderr, "File for preset '%s' not found\n", arg);
++        tc_log_error(MOD_NAME, "File for preset '%s' not found", arg);
+         av_exit(1);
+     }
+ 
+@@ -1201,7 +1201,7 @@ MOD_init
+ 	/* FIXME: transcode itself contains "broken ffmpeg default settings", thus we need to override them! */
+ 	if (lavc_param_video_preset) {
+ 		avcodec_opts[AVMEDIA_TYPE_VIDEO] = lavc_venc_context;
+-		video_codec_name = ffmpeg_codec_name(codec->name);
++		video_codec_name = av_strdup(ffmpeg_codec_name(codec->name));
+ 
+ 		const char *preset_start = lavc_param_video_preset;
+ 		while (preset_start) {
+@@ -1219,6 +1219,8 @@ MOD_init
+ 			if (opt_preset("vpre", preset_name) != 0) {
+ 				tc_log_warn(MOD_NAME, "Parsing ffmpeg preset '%s' failed", preset_name);
+ 			}
++      av_free(video_codec_name);
++      video_codec_name = NULL;
+ 			if (verbose) {
+ 				int i;
+ 				tc_log_info(MOD_NAME, "After parsing preset '%s', %i options are overridden:", preset_name, opt_name_count);
+-- 
+2.49.1
+

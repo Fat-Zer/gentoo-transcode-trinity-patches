@@ -1,0 +1,81 @@
+From c171d6967305627f936db83863356f462cf693bb Mon Sep 17 00:00:00 2001
+From: Unknown Author <unknown@examle.com>
+Date: Wed, 30 Jul 2025 18:56:39 +0300
+Subject: [PATCH 13/26] [v4l] use strerror instead of sys_errlist
+
+This fixes build against glibc-2.32
+
+Origin: https://github.com/gentoo/gentoo/commit/3a260316838f08e9c0a273220115a240e5eb6914
+Original-commuter: Vadim Misbakh-Soloviov <mva@gentoo.org>
+Patch-name: transcode-1.1.7-glibc-2.32.patch
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ import/v4l/import_v4l2.c   | 10 +++++-----
+ import/v4l/import_v4lcam.c |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/import/v4l/import_v4l2.c b/import/v4l/import_v4l2.c
+index 6a50e7e8..01b673e7 100644
+--- a/import/v4l/import_v4l2.c
++++ b/import/v4l/import_v4l2.c
+@@ -455,7 +455,7 @@ static int tc_v4l2_video_setup_cropping(V4L2Source *vs,
+         tc_log_warn(MOD_NAME,
+                     "driver does not support cropping"
+                     "(ioctl(VIDIOC_CROPCAP) returns \"%s\"), disabled",
+-                    errno <= sys_nerr ? sys_errlist[errno] : "unknown");
++                    strerror(errno));
+         return TC_ERROR;
+     }
+     if (verbose_flag > TC_INFO) {
+@@ -485,7 +485,7 @@ static int tc_v4l2_video_setup_cropping(V4L2Source *vs,
+         tc_log_warn(MOD_NAME,
+                     "driver does not support inquiring cropping"
+                     " parameters (ioctl(VIDIOC_G_CROP) returns \"%s\")",
+-                    errno <= sys_nerr ? sys_errlist[errno] : "unknown");
++                    strerror(errno));
+         return -1;
+     }
+ 
+@@ -513,7 +513,7 @@ static int tc_v4l2_video_setup_cropping(V4L2Source *vs,
+             tc_log_warn(MOD_NAME,
+                         "driver does not support inquering cropping"
+                         " parameters (ioctl(VIDIOC_G_CROP) returns \"%s\")",
+-                        errno <= sys_nerr ? sys_errlist[errno] : "unknown");
++                        strerror(errno));
+             return -1;
+         }
+         if (verbose_flag > TC_INFO) {
+@@ -613,7 +613,7 @@ static int tc_v4l2_video_setup_stream_parameters(V4L2Source *vs, int fps)
+     if (err < 0) {
+         if (verbose_flag) {
+             tc_log_warn(MOD_NAME, "driver does not support setting parameters (ioctl(VIDIOC_S_PARM) returns \"%s\")",
+-                        errno <= sys_nerr ? sys_errlist[errno] : "unknown");
++                        strerror(errno));
+         }
+     }
+     return TC_OK;
+@@ -628,7 +628,7 @@ static int tc_v4l2_video_get_TV_standard(V4L2Source *vs)
+     err = ioctl(vs->video_fd, VIDIOC_G_STD, &stdid);
+     if (err < 0) {
+         tc_log_warn(MOD_NAME, "driver does not support get std (ioctl(VIDIOC_G_STD) returns \"%s\")",
+-                    errno <= sys_nerr ? sys_errlist[errno] : "unknown");
++                    strerror(errno));
+         memset(&stdid, 0, sizeof(v4l2_std_id));
+     }
+ 
+diff --git a/import/v4l/import_v4lcam.c b/import/v4l/import_v4lcam.c
+index 5dfa14ec..fd35f765 100644
+--- a/import/v4l/import_v4lcam.c
++++ b/import/v4l/import_v4lcam.c
+@@ -368,7 +368,7 @@ static int tc_v4l2_video_setup_stream_parameters(V4L2Source *vs, int fps)
+     if (err < 0) {
+         tc_log_warn(MOD_NAME, "driver does not support setting parameters"
+                               " (ioctl(VIDIOC_S_PARM) returns \"%s\")",
+-                    errno <= sys_nerr ? sys_errlist[errno] : "unknown");
++                              strerror(errno));
+     }
+     return TC_OK;
+ }
+-- 
+2.49.1
+

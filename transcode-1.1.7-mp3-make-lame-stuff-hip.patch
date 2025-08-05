@@ -1,0 +1,183 @@
+From c1af208ba587291d7d724ecda585e3c9127b5c99 Mon Sep 17 00:00:00 2001
+From: Alexander Golubev <fatzer2@gmail.com>
+Date: Fri, 1 Aug 2025 03:48:15 +0300
+Subject: [PATCH 21/26] [mp3] make lame stuff hip
+
+libmp3lame no longer provides old lame_*() calls by default, so let's
+port to its new hip_*() API! This fixes build against versions of
+liblame which don't supply old-style API.
+
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ import/decode_mp3.c |  9 ++++++---
+ import/mpg123.c     | 26 ++++++++++++++------------
+ import/mpg123.h     |  4 ++--
+ 3 files changed, 22 insertions(+), 17 deletions(-)
+
+diff --git a/import/decode_mp3.c b/import/decode_mp3.c
+index 524e0490..f7da71c3 100644
+--- a/import/decode_mp3.c
++++ b/import/decode_mp3.c
+@@ -63,6 +63,7 @@ static void decode_mpaudio(decode_t *decode, int format)
+ #ifdef HAVE_LAME
+     int samples = 0, j, bytes, channels = 0, i, padding = 0;
+     int verbose;
++    hip_t hip_handle = 0;
+ 
+     mp3data_struct *mp3data = NULL;
+     FILE *in_file = NULL;
+@@ -82,7 +83,8 @@ static void decode_mpaudio(decode_t *decode, int format)
+         exit(1);
+     }
+ 
+-    if (lame_decode_init() < 0) {
++    hip_handle = hip_decode_init();
++    if (!hip_handle) {
+         tc_log_error(__FILE__, "failed to init decoder");
+         exit(1);
+     }
+@@ -98,7 +100,7 @@ static void decode_mpaudio(decode_t *decode, int format)
+             ungetc(c, in_file);
+     }
+ 
+-    samples = lame_decode_initfile(in_file, mp3data, format);
++    samples = hip_decode_initfile(hip_handle, in_file, mp3data, format);
+ 
+     if (verbose) {
+         tc_log_info(__FILE__, "channels=%d, samplerate=%d Hz, bitrate=%d kbps, (%d)",
+@@ -128,7 +130,7 @@ static void decode_mpaudio(decode_t *decode, int format)
+     // decoder loop
+     channels = mp3data->stereo;
+ 
+-    while ((samples=lame_decode_fromfile(in_file, ch1, ch2, mp3data)) > 0) {
++    while ((samples=hip_decode_fromfile(hip_handle, in_file, ch1, ch2, mp3data)) > 0) {
+         // interleave data
+         j = 0;
+         switch (channels) {
+@@ -153,6 +155,7 @@ static void decode_mpaudio(decode_t *decode, int format)
+         }
+     }
+ 
++    hip_decode_exit(hip_handle);
+     import_exit(0);
+ 
+ #else  // HAVE_LAME
+diff --git a/import/mpg123.c b/import/mpg123.c
+index f4bee611..654873d1 100644
+--- a/import/mpg123.c
++++ b/import/mpg123.c
+@@ -121,7 +121,7 @@ static int is_syncword_mp3(const void *const headerptr)
+ }
+ 
+ 
+-int lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int format)
++int hip_decode_initfile(hip_t hip_handle, FILE * fd, mp3data_struct * mp3data, int format)
+ {
+     //  VBRTAGDATA pTagData;
+     // int xing_header,len2,num_frames;
+@@ -134,7 +134,6 @@ int lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int format)
+     memset(mp3data, 0, sizeof(mp3data_struct));
+     memset(buf, 0, bufsize);
+ 
+-    lame_decode_init();
+     if (!format) format = 0x55;
+ 
+     len = 4;
+@@ -183,7 +182,7 @@ int lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int format)
+     // frame.  Cannot decode first frame here because we are not
+     // yet prepared to handle the output.
+ 
+-    ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
++    ret = hip_decode1_headers(hip_handle, buf, len, pcm_l, pcm_r, mp3data);
+     if (-1 == ret)
+         return -1;
+ 
+@@ -192,7 +191,7 @@ int lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int format)
+         len = fread(buf, 1, sizeof(buf), fd);
+         if (len != sizeof(buf))
+             return -1;
+-        ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
++        ret = hip_decode1_headers(hip_handle, buf, len, pcm_l, pcm_r, mp3data);
+         if (-1 == ret)
+             return -1;
+     }
+@@ -219,20 +218,20 @@ For lame_decode_fromfile:  return code
+    n     number of samples output.  either 576 or 1152 depending on MP3 file.
+ 
+ 
+-For lame_decode1_headers():  return code
++For hip_decode1_headers():  return code
+   -1     error
+    0     ok, but need more data before outputing any samples
+    n     number of samples output.  either 576 or 1152 depending on MP3 file.
+ */
+ 
+-int lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
++int hip_decode_fromfile(hip_t hip_handle, FILE * fd, short pcm_l[], short pcm_r[],
+ 			 mp3data_struct * mp3data)
+ {
+     int     ret = 0, len=0;
+     unsigned char buf[1024];
+ 
+     /* first see if we still have data buffered in the decoder: */
+-    ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
++    ret = hip_decode1_headers(hip_handle, buf, len, pcm_l, pcm_r, mp3data);
+     if (ret!=0) return ret;
+ 
+ 
+@@ -241,12 +240,12 @@ int lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
+         len = fread(buf, 1, 1024, fd);
+         if (len == 0) {
+ 	    /* we are done reading the file, but check for buffered data */
+-	    ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
++	    ret = hip_decode1_headers(hip_handle, buf, len, pcm_l, pcm_r, mp3data);
+ 	    if (ret<=0) return -1;  // done with file
+ 	    break;
+ 	}
+ 
+-        ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
++        ret = hip_decode1_headers(hip_handle, buf, len, pcm_l, pcm_r, mp3data);
+         if (ret == -1) return -1;
+ 	if (ret >0) break;
+     }
+@@ -274,8 +273,11 @@ int buf_probe_mp3(unsigned char *_buf, int len, ProbeTrackInfo *pcm)
+     exit(1);
+   }
+ 
+-  lame_decode_init();
+-
++  hip_t hip_handle = hip_decode_init();
++  if(!hip_handle) {
++    tc_log_error(__FILE__, "failed to init decoder");
++    exit(1);
++  }
+   buf=_buf;
+ 
+   for (i = 0; i < len - 1; i++) {
+@@ -292,7 +294,7 @@ int buf_probe_mp3(unsigned char *_buf, int len, ProbeTrackInfo *pcm)
+ 
+   type = buf[1] & 0xff;
+ 
+-  ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
++  ret = hip_decode1_headers(hip_handle, buf, len, pcm_l, pcm_r, mp3data);
+ 
+   if (-1 == ret) {
+     //tc_log_error(__FILE__, "failed to probe mp3 header (%d)", len);
+diff --git a/import/mpg123.h b/import/mpg123.h
+index a608e190..bb24a251 100644
+--- a/import/mpg123.h
++++ b/import/mpg123.h
+@@ -36,8 +36,8 @@
+ #include <lame.h>
+ #endif
+ 
+-int lame_decode_initfile(FILE * fd, mp3data_struct * mp3data, int format);
+-int lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[], mp3data_struct * mp3data);
++int hip_decode_initfile(hip_t hip, FILE * fd, mp3data_struct * mp3data, int format);
++int hip_decode_fromfile(hip_t hip_handle, FILE * fd, short pcm_l[], short pcm_r[], mp3data_struct * mp3data);
+ 
+ int buf_probe_mp3(unsigned char *_buf, int len, ProbeTrackInfo *pcm);
+ 
+-- 
+2.49.1
+

@@ -1,0 +1,32 @@
+From 84dc53d2cea910319990c2e19ac2ca8418f4ac73 Mon Sep 17 00:00:00 2001
+From: Unknown Author <unknown@examle.com>
+Date: Wed, 30 Jul 2025 02:41:02 +0300
+Subject: [PATCH 09/26] [subtitler] Fix freetype includes
+
+A patch from Gentoo to fix build against freetype-2.5.1
+
+Origin: https://github.com/gentoo/gentoo-historical-2/commit/b317174fc4aa4befbba3b43132fbe4ea309de489
+Original-commuter: Lars Wendler <polynomial-c@gentoo.org>
+Patch-name: transcode-1.1.7-freetype251.patch
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ filter/subtitler/load_font.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/filter/subtitler/load_font.c b/filter/subtitler/load_font.c
+index 0ea5c158..23da2db3 100644
+--- a/filter/subtitler/load_font.c
++++ b/filter/subtitler/load_font.c
+@@ -47,8 +47,8 @@ Artur Zaprzala <zybi@fanthom.irc.pl>
+ // FreeType specific includes
+ #include <ft2build.h>
+ #include FT_FREETYPE_H
++#include FT_GLYPH_H
+ 
+-#include <freetype/ftglyph.h>
+ 
+ /**
+  * @file bswap.h
+-- 
+2.49.1
+

@@ -1,0 +1,38 @@
+From 249856936bfc55c24e018882e9ecb634228e4bf6 Mon Sep 17 00:00:00 2001
+From: Alexander Golubev <fatzer2@gmail.com>
+Date: Fri, 1 Aug 2025 02:47:27 +0300
+Subject: [PATCH 17/26] Avoid filtering pkg-config flags.
+
+This was causing failure to detect resent enough  ImageWand due to
+pkg-config --cflags contained several -D definitions, which were
+required to successfully include the header.
+
+Trinity-Bug: https://mirror.git.trinitydesktop.org/gitea/TDE/tde-packaging-gentoo/issues/347
+Gentoo-Bug: https://bugs.gentoo.org/914628
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ acinclude.m4 | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/acinclude.m4 b/acinclude.m4
+index d89f9f63..7c8cb28a 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -561,14 +561,6 @@ if test x"$enable_$1" = x"yes" ; then
+       fi
+     fi
+   fi
+-  ipaths="" ; xi=""
+-  for i in $$1_ii ; do
+-    case $i in
+-      -I*) ipaths="$ipaths $i" ;;
+-        *) xi="$xi $i" ;;
+-    esac
+-  done
+-  $1_ii="$ipaths"
+   $1_ii="`echo $$1_ii | sed -e 's/  */ /g'`"
+   $3_EXTRA_CFLAGS="$$3_EXTRA_CFLAGS $xi"
+   $3_EXTRA_CFLAGS="`echo $$3_EXTRA_CFLAGS | sed -e 's/  */ /g'`"
+-- 
+2.49.1
+

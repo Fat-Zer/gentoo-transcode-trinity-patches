@@ -1,0 +1,48 @@
+From 4f655acb31729a66256eb8314ae71b9057961922 Mon Sep 17 00:00:00 2001
+From: Unknown Author <unknown@examle.com>
+Date: Wed, 30 Jul 2025 18:20:22 +0300
+Subject: [PATCH 11/26] [resample] build against libswresample instead of
+ libavresample
+
+The patch originates in Arch, but the authorship was lost to time.
+
+Note: the patch is incomplete. While it fixes the build (with gcc<14) it
+just produces a broken module, which fails to load due to unresolved
+symbol.
+
+Bug: https://bugs.gentoo.org/722296
+Origin: https://github.com/gentoo/gentoo/commit/e01dfe46be8c282fb861b39821ffb0258bad8c5a
+Original-commuter: Lars Wendler <polynomial-c@gentoo.org>
+Patch-name: transcode-1.1.7-swresample.patch
+See-also: https://git.archlinux.org/svntogit/community.git/tree/trunk/transcode-swresample.patch?h=packages/transcode&id=7fb278671fbd0a201de8d32aefee888fd253db44
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+Thanks-to: jospezial <jospezial@gmx.de>
+---
+ filter/filter_resample.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/filter/filter_resample.c b/filter/filter_resample.c
+index c94c6cce..56942f3f 100644
+--- a/filter/filter_resample.c
++++ b/filter/filter_resample.c
+@@ -37,7 +37,7 @@
+ #include "libtc/optstr.h"
+ #include "libtc/tcavcodec.h"
+ #include "libtc/tcmodule-plugin.h"
+-#include <libavresample/avresample.h>
++#include <libswresample/swresample.h>
+ 
+ 
+ typedef struct {
+@@ -46,7 +46,7 @@ typedef struct {
+ 
+     int bytes_per_sample;
+ 
+-    AVAudioResampleContext *resample_ctx;
++    SwrContext *resample_ctx;
+ } ResamplePrivateData;
+ 
+ static const char resample_help[] = ""
+-- 
+2.49.1
+

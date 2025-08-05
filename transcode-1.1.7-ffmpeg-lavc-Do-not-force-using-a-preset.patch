@@ -1,0 +1,45 @@
+From 0115cdd84c3eb20597b4a27f032563fec53303a1 Mon Sep 17 00:00:00 2001
+From: Unknown Author <unknown@examle.com>
+Date: Wed, 30 Jul 2025 02:28:08 +0300
+Subject: [PATCH 07/26] [ffmpeg][lavc] Do not force using a preset.
+
+This prevents opening non-existant preset by default.
+
+Origin: https://github.com/gentoo/gentoo-historical-2/commit/b12269617f3f7610b2eca7d90ca23862ec1fd99b
+Original-commuter: Alexis Ballier <aballier@gentoo.org>
+Patch-name: transcode-1.1.7-preset-force.patch
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ export/export_ffmpeg.c | 2 +-
+ export/ffmpeg_cfg.c    | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/export/export_ffmpeg.c b/export/export_ffmpeg.c
+index 1577fac8..f39f8701 100644
+--- a/export/export_ffmpeg.c
++++ b/export/export_ffmpeg.c
+@@ -1199,7 +1199,7 @@ MOD_init
+     lavc_venc_context->me_method = ME_ZERO + lavc_param_vme;
+ 
+ 	/* FIXME: transcode itself contains "broken ffmpeg default settings", thus we need to override them! */
+-	if (lavc_param_video_preset) {
++	if (lavc_param_video_preset && strcmp(lavc_param_video_preset, "none")) {
+ 		avcodec_opts[AVMEDIA_TYPE_VIDEO] = lavc_venc_context;
+ 		video_codec_name = av_strdup(ffmpeg_codec_name(codec->name));
+ 
+diff --git a/export/ffmpeg_cfg.c b/export/ffmpeg_cfg.c
+index 4516a4b2..df4d6df4 100644
+--- a/export/ffmpeg_cfg.c
++++ b/export/ffmpeg_cfg.c
+@@ -124,7 +124,7 @@ int lavc_param_gmc = 0;
+ //int lavc_param_atag = 0;
+ //int lavc_param_abitrate = 224;
+ 
+-char *lavc_param_video_preset = "medium";
++char *lavc_param_video_preset = "none";
+ char *lavc_param_ffmpeg_datadir = "/usr/share/ffmpeg";
+ 
+ TCConfigEntry lavcopts_conf[]={
+-- 
+2.49.1
+

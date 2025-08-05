@@ -1,0 +1,33 @@
+From dfb48262b1f64c4cc2481dd9a6a8bb41c30b5cf9 Mon Sep 17 00:00:00 2001
+From: jospezial <jospezial@gmx.de>
+Date: Wed, 30 Jul 2025 04:55:52 +0300
+Subject: [PATCH 10/26] [ffmpeg] fix build with ffmpeg 2.4+
+
+Bug: https://bugs.gentoo.org/520190
+Origin: https://github.com/gentoo/gentoo-historical-2/commit/c0bf8cc589b950ee88800ae81d49d4aa8979eae7
+Original-commuter: Alexis Ballier <aballier@gentoo.org>
+Patch-name: transcode-1.1.7-ffmpeg24.patch
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ import/probe_ffmpeg.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/import/probe_ffmpeg.c b/import/probe_ffmpeg.c
+index 3fc2e34a..130cc255 100644
+--- a/import/probe_ffmpeg.c
++++ b/import/probe_ffmpeg.c
+@@ -120,7 +120,11 @@ void probe_ffmpeg(info_t *ipipe)
+ 
+     translate_info(lavf_dmx_context, ipipe->probe_info);
+ 
++#if LIBAVFORMAT_VERSION_INT > AV_VERSION_INT(53,25,0)
++    avformat_close_input(&lavf_dmx_context);
++#else
+     av_close_input_file(lavf_dmx_context);
++#endif
+     return;
+ }
+ 
+-- 
+2.49.1
+

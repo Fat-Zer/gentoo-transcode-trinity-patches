@@ -1,0 +1,33 @@
+From cfd867dcab82831a274eba2d50203ca79e5647a8 Mon Sep 17 00:00:00 2001
+From: Alexander Golubev <fatzer2@gmail.com>
+Date: Fri, 1 Aug 2025 03:20:22 +0300
+Subject: [PATCH 18/26] [libtc] use stpncpy() instead of strlcpy()
+
+strlcpy() is non-standard and in glibc it's available from obscure
+header <bsd/string.h>, and since gcc-14 no longer allows
+implicitly-defined functions it's easier to just use strncpy() instead
+of dance around with conditional compilation and autotools tests.
+
+Signed-off-by: Alexander Golubev <fatzer2@gmail.com>
+---
+ libtc/cfgfile.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/libtc/cfgfile.c b/libtc/cfgfile.c
+index ca0331ce..1f7be468 100644
+--- a/libtc/cfgfile.c
++++ b/libtc/cfgfile.c
+@@ -297,7 +297,9 @@ static int parse_line(const char *buf, TCConfigEntry *conf, const char *tag,
+     char *name, *value, *s;
+ 
+     /* Make a working copy of the string */
+-    if (strlcpy(workbuf, buf, sizeof(workbuf)) >= sizeof(workbuf)) {
++    workbuf[sizeof(workbuf)-1] = 0;
++    stpncpy(workbuf, buf, sizeof(workbuf));
++    if (workbuf[sizeof(workbuf)-1]) {
+         parse_line_error(buf, filename, line, tag,
+                          "Buffer overflow while parsing configuration data");
+         return 0;
+-- 
+2.49.1
+
